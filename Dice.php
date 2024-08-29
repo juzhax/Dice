@@ -251,32 +251,30 @@ class Dice {
 				}
 				// Support PHP 7 scalar type hinting,  is_a('string', 'foo') doesn't work so this is a hacky AF workaround: call_user_func('is_' . $type, '')
 
-				// Find a match in $args for scalar types
-				else if ($args && $param->getType()) {
-					$paramType = $param->getType();
-
-					// Handle union types
-					if ($paramType instanceof \ReflectionUnionType) {
-						foreach ($paramType->getTypes() as $type) {
-							if ($type instanceof \ReflectionNamedType) {
-								for ($i = 0; $i < count($args); $i++) {
-									if (call_user_func('is_' . $type->getName(), $args[$i])) {
-										$parameters[] = array_splice($args, $i, 1)[0];
-										break 2; // Break out of both loops if a match is found
-									}
-								}
-							}
-						}
-					}
-					// Handle single types
-					else if ($paramType instanceof \ReflectionNamedType) {
-						for ($i = 0; $i < count($args); $i++) {
-							if (call_user_func('is_' . $paramType->getName(), $args[$i])) {
-								$parameters[] = array_splice($args, $i, 1)[0];
-								break;
-							}
-						}
-					}
+				//Find a match in $args for scalar types
+				elseif ($args && $param->getType()) {
+                    $type = $param->getType();
+                    if ($type instanceof \ReflectionNamedType) {
+                        $types = [$type];
+                    } /** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection */ elseif (
+                        version_compare(PHP_VERSION, "8.0.0", ">=") &&
+                        $type instanceof \ReflectionUnionType
+                    ) {
+                        $types = $type->getTypes();
+                    }
+                    for ($i = 0; $i < count($args); $i++) {
+                        foreach ($types as $type) {
+                            if (
+                                call_user_func(
+                                    "is_" . $type->getName(),
+                                    $args[$i]
+                                )
+                            ) {
+                                $parameters[] = array_splice($args, $i, 1)[0];
+                                break 2;
+                            }
+                        }
+                    }
 				}
 				else if ($args) {
 					$parameters[] = $this->expand(array_shift($args));
