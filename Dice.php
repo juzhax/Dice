@@ -264,15 +264,22 @@ class Dice {
                     }
                     for ($i = 0; $i < count($args); $i++) {
                         foreach ($types as $type) {
-                            if (
-                                call_user_func(
-                                    "is_" . $type->getName(),
-                                    $args[$i]
-                                )
-                            ) {
-                                $parameters[] = array_splice($args, $i, 1)[0];
-                                break 2;
-                            }
+							
+							$typeName = $type->getName();
+
+							if ($type->isBuiltin()) {
+								// Handle built-in types like string, int, etc.
+								if (call_user_func("is_" . $typeName, $args[$i])) {
+									$parameters[] = array_splice($args, $i, 1)[0];
+									break 2;
+								}
+							} else {
+								// Handle class types
+								if (is_object($args[$i]) && $args[$i] instanceof $typeName) {
+									$parameters[] = array_splice($args, $i, 1)[0];
+									break 2;
+								}
+							}							
                         }
                     }
 				}
