@@ -31,7 +31,21 @@ abstract class DiceTest extends \PHPUnit\Framework\TestCase {
 	protected function setUp(): void {
 		parent::setUp ();
 		$this->dice = new \Dice\Dice();
+		// Add rules for NB and NC to ensure they are instantiated by Dice
+		// $ruleForNB = [
+		// 	'shared' => true,
+		// 	'instanceOf' => 'NB'
+		// ];
+
+		// $ruleForNC = [
+		// 	'shared' => true,
+		// 	'instanceOf' => 'NC'
+		// ];
+
+		// $this->dice = $this->dice->addRule('NB', $ruleForNB);
+		// $this->dice = $this->dice->addRule('NC', $ruleForNC);		
 	}
+	
 
 	protected function tearDown(): void {
 		$this->dice = null;
