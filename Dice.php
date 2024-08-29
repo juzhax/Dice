@@ -251,12 +251,30 @@ class Dice {
 				}
 				// Support PHP 7 scalar type hinting,  is_a('string', 'foo') doesn't work so this is a hacky AF workaround: call_user_func('is_' . $type, '')
 
-				//Find a match in $args for scalar types
+				// Find a match in $args for scalar types
 				else if ($args && $param->getType()) {
-					for ($i = 0; $i < count($args); $i++) {
-						if (call_user_func('is_' . $param->getType()->getName(), $args[$i])) {
-							$parameters[] = array_splice($args, $i, 1)[0];
-                            break;
+					$paramType = $param->getType();
+
+					// Handle union types
+					if ($paramType instanceof \ReflectionUnionType) {
+						foreach ($paramType->getTypes() as $type) {
+							if ($type instanceof \ReflectionNamedType) {
+								for ($i = 0; $i < count($args); $i++) {
+									if (call_user_func('is_' . $type->getName(), $args[$i])) {
+										$parameters[] = array_splice($args, $i, 1)[0];
+										break 2; // Break out of both loops if a match is found
+									}
+								}
+							}
+						}
+					}
+					// Handle single types
+					else if ($paramType instanceof \ReflectionNamedType) {
+						for ($i = 0; $i < count($args); $i++) {
+							if (call_user_func('is_' . $paramType->getName(), $args[$i])) {
+								$parameters[] = array_splice($args, $i, 1)[0];
+								break;
+							}
 						}
 					}
 				}
